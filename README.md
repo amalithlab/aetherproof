@@ -1,12 +1,15 @@
-# ATHER - Adversarial Multi-Agent Autonomous Orchestrator
+# AETHERPROOF IDE - Universal Aetherproof Verification Autonomous Orchestrator
+**Owned by Amalith LLC | Developed by Amalith Lab**
+
+
 
 > **Academic Foundation:** This project is based on the research paper [vibeCoding](https://webpages.charlotte.edu/yonwang/papers/vibeCoding.pdf).
 
-ATHER is an advanced, autonomous AI Swarm Engine designed to operate directly within your Visual Studio Code environment. It utilizes a LangGraph-based architecture featuring specialized agents (Architect, Coder, Critic, Verifier) to autonomously design, develop, audit, and test complex software systems.
+AETHERPROOF IDE is an advanced, autonomous AI Swarm Engine designed to operate directly within your Visual Studio Code environment. It utilizes a LangGraph-based architecture featuring specialized agents (Architect, Coder, Critic, Verifier) to autonomously design, develop, audit, and test complex software systems.
 
 ## 📁 Repository Structure
 
-This repository contains the production-ready distribution artifacts for the ATHER system:
+This repository contains the production-ready distribution artifacts for the AETHERPROOF IDE system:
 
 - **`extensions/`**: Platform-specific VS Code extension packages (`.vsix`). These are optimized to include only the necessary engine binary for their target OS, ensuring a lightweight and stable installation.
 
@@ -16,10 +19,10 @@ You do **not** need to install Node.js, Bun, or any other dependencies to run th
 
 ### Step 1: Download the Extension
 Download the specific `.vsix` file from the [extensions/](extensions/) directory for your operating system:
-- **MacOS (Apple Silicon):** `extensions/aether-ide-darwin-arm64-0.1.0.vsix`
-- **MacOS (Intel):** `extensions/aether-ide-darwin-x64-0.1.0.vsix`
-- **Windows (x64):** `extensions/aether-ide-windows-x64-0.1.0.vsix`
-- **Linux:** `extensions/aether-ide-linux-0.1.0.vsix`
+- **MacOS (Apple Silicon):** `extensions/aetherproof-ide-darwin-arm64-0.1.0.vsix`
+- **MacOS (Intel):** `extensions/aetherproof-ide-darwin-x64-0.1.0.vsix`
+- **Windows (x64):** `extensions/aetherproof-ide-windows-x64-0.1.0.vsix`
+- **Linux:** `extensions/aetherproof-ide-linux-0.1.0.vsix`
 
 ### Step 2: Install in Visual Studio Code
 1. Open **Visual Studio Code**.
@@ -29,7 +32,7 @@ Download the specific `.vsix` file from the [extensions/](extensions/) directory
 5. Select the `.vsix` file you downloaded.
 
 ### Step 3: Setup and Usage
-1. Click the **ÆTHER** icon in your Activity Bar (left sidebar).
+1. Click the **AETHERPROOF IDE** icon in your Activity Bar (left sidebar).
 2. Input your LLM API keys (Anthropic, Google, OpenAI, etc.).
 3. Type your task and watch the Swarm orchestrate your solution!
 
