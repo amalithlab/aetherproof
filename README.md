@@ -9,27 +9,26 @@ AETHERPROOF IDE is an advanced, autonomous AI Swarm Engine designed to operate d
 
 ## 📁 Repository Structure
 
-This repository contains the production-ready distribution artifacts for the AETHERPROOF IDE system:
+This repository is the official distribution hub for **AETHERPROOF IDE**.
 
-- **`extensions/`**: Platform-specific VS Code extension packages (`.vsix`). These are optimized to include only the necessary engine binary for their target OS, ensuring a lightweight and stable installation.
+- **[Releases](https://github.com/amalithlab/aetherproof/releases)**: This is where you should download the latest stable version of the extension.
+- **`extensions/`**: Contains the latest built `.vsix` packages for each platform, synced automatically from our development repository.
 
-## 🚀 Installation Instructions
+## 🚀 Installation & Releases
 
-You do **not** need to install Node.js, Bun, or any other dependencies to run the engine. Everything is bundled within the extension.
+All versions are automatically compiled and published from our development repository: [amalithlab/aetherproof-dev](https://github.com/amalithlab/aetherproof-dev).
 
-### Step 1: Download the Extension
-Download the specific `.vsix` file from the [extensions/](extensions/) directory for your operating system:
-- **MacOS (Apple Silicon):** `extensions/aetherproof-ide-darwin-arm64-0.1.0.vsix`
-- **MacOS (Intel):** `extensions/aetherproof-ide-darwin-x64-0.1.0.vsix`
-- **Windows (x64):** `extensions/aetherproof-ide-windows-x64-0.1.0.vsix`
-- **Linux:** `extensions/aetherproof-ide-linux-0.1.0.vsix`
+### Download the Extension
+Please visit the **[Latest Release](https://github.com/amalithlab/aetherproof/releases/latest)** to download the `.vsix` for your operating system:
+- **Linux**: `aetherproof-ide-linux.vsix`
+- **MacOS**: `aetherproof-ide-macos.vsix`
+- **Windows**: `aetherproof-ide-windows.vsix`
 
-### Step 2: Install in Visual Studio Code
+### How to Install in VS Code
 1. Open **Visual Studio Code**.
-2. Navigate to the **Extensions** view (`Cmd+Shift+X` or `Ctrl+Shift+X`).
-3. Click the **Views and More Actions** icon (`...` in the top right corner).
-4. Select **Install from VSIX...**.
-5. Select the `.vsix` file you downloaded.
+2. Navigate to the **Extensions** view (`Cmd+Shift+X`).
+3. Click the **Views and More Actions** icon (`...`).
+4. Select **Install from VSIX...** and choose your downloaded file.
 
 ### Step 3: Setup and Usage
 1. Click the **AETHERPROOF IDE** icon in your Activity Bar (left sidebar).
