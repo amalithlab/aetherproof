@@ -35,6 +35,14 @@ Please visit the **[Latest Release](https://github.com/amalithlab/aetherproof/re
 2. Input your LLM API keys (Anthropic, Google, OpenAI, etc.).
 3. Type your task and watch the Swarm orchestrate your solution!
 
+### 🌐 Enabling the Web Browser Subagent (Optional)
+To enable the autonomous **Browser Subagent** for real-time web research, documentation lookups, and bypassing Cloudflare blocks:
+1. Open your terminal in the workspace directory.
+2. Run the following command to download the headless browser binaries:
+   ```bash
+   npx playwright install chromium
+   ```
+
 ## 🧠 Advanced Swarm Capabilities
 
 We have achieved **100% Native Autonomy** with the following integrated modules:
