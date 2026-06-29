@@ -43,6 +43,19 @@ To enable the autonomous **Browser Subagent** for real-time web research, docume
    npx playwright install chromium
    ```
 
+## 🔍 Web Search Engine Configuration
+For tasks requiring live web research, literature collection, or crawling, the engine uses search queries. 
+
+To provide high-quality search results with zero setup, AETHERPROOF includes a built-in **Search Fallback Cascade**:
+1. **Premium Search APIs:** Checks for configured API keys (`Tavily`, `Exa`, `Bing API`, or `Google Custom Search Engine`).
+2. **Gemini Search Grounding (Recommended & Free):** If you configure a Google Gemini API key (`AETHERPROOF_KEY_GOOGLE`), the engine automatically uses Gemini's native Google Search grounding feature to pull real Google Search results for free. 
+   > [!TIP]
+   > We recommend setting your **Global Swarm Default** (Primary Provider) to **Google Gemini** in the Settings Panel. This enables free, high-quality search grounding automatically across the swarm with no extra API key needed!
+3. **DuckDuckGo HTML Scraping:** Text-based search scraping (free).
+4. **Bing HTML Scraping:** GET-based search page scraping (free fallback).
+5. **Wikipedia API:** Basic term matching.
+
+
 ## 🧠 Advanced Swarm Capabilities
 
 We have achieved **100% Native Autonomy** with the following integrated modules:
