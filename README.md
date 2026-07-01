@@ -12,7 +12,6 @@ AETHERPROOF IDE is an advanced, autonomous AI Swarm Engine designed to operate d
 This repository is the official distribution hub for **AETHERPROOF IDE**.
 
 - **[Releases](https://github.com/amalithlab/aetherproof/releases)**: This is where you should download the latest stable version of the extension.
-- **`extensions/`**: Contains the latest built `.vsix` packages for each platform, synced automatically from our development repository.
 
 ## 🚀 Installation & Releases
 
@@ -31,9 +30,20 @@ Please visit the **[Latest Release](https://github.com/amalithlab/aetherproof/re
 4. Select **Install from VSIX...** and choose your downloaded file.
 
 ### Step 3: Setup and Usage
-1. Click the **AETHERPROOF IDE** icon in your Activity Bar (left sidebar).
-2. Input your LLM API keys (Anthropic, Google, OpenAI, etc.).
-3. Type your task and watch the Swarm orchestrate your solution!
+1. **Activate the extension:** Click the **AETHERPROOF IDE** icon in your VS Code Activity Bar (left sidebar) to open the chat panel and settings panel.
+2. **Choose your Swarm Mode:**
+   - **Solo Agent:** Uses a single primary LLM provider to execute tasks step-by-step. Best for quick edits and linear tasks.
+   - **Adversarial Swarm:** Launches a full multi-agent graph with specialized roles (Architect, Coder, Critic, Verifier) debating and verifying code logic. Enforces TDD and security audits.
+   - **Round Table Swarm:** An iterative, consensus-driven debate format where multiple agents argue architectural and technical choices side-by-side until agreement is negotiated.
+3. **Configure LLM Providers:**
+   - Go to the Settings Panel inside the Aetherproof view.
+   - Assign providers/models for each role (Architect, Coder, Critic, Verifier) or set a global **Primary Provider** default.
+   - Ensure the respective API keys are entered (e.g., Anthropic, Google Gemini, OpenAI, DeepSeek, MiniMax, etc.).
+4. **Configure the Search Engine:**
+   - For live web research and online solicitation analysis, select a **Search Provider**.
+   - If **Google** (Gemini) is used as the primary/global provider, Aetherproof automatically uses **Gemini Search Grounding** as the default search engine (providing high-quality live Google Search results for free with no additional key needed).
+   - If utilizing other providers, configure dedicated search keys (such as `Tavily`, `Exa`, `Bing Search API`, or `Google Custom Search Engine`) in settings. Otherwise, the engine falls back to free HTML scraping (DuckDuckGo/Bing).
+5. **Run your task:** Type your prompt in the chat box and watch the engine orchestrate the solution!
 
 ### 🌐 Enabling the Web Browser Subagent (Optional)
 To enable the autonomous **Browser Subagent** for real-time web research, documentation lookups, and bypassing Cloudflare blocks:
