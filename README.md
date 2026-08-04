@@ -30,6 +30,7 @@ Visit the **[Latest Development Release](https://github.com/amalithlab/aetherpro
 | **macOS** (Intel x64) | Portable ZIP | `Aether-1.0.0-mac.zip` |
 | **Windows** (x64) | NSIS Installer Setup | `Aether Setup 1.0.0.exe` |
 | **Linux** (x64) | Universal AppImage | `Aether-1.0.0.AppImage` |
+| **Linux** (x64) | Debian / Ubuntu Package | `aether_1.0.0_amd64.deb` |
 
 ---
 
@@ -47,14 +48,17 @@ Visit the **[Latest Development Release](https://github.com/amalithlab/aetherpro
 3. Follow the installation wizard to choose an installation folder.
 4. Launch **Aether** from your Desktop shortcut or Start Menu.
 
-### Linux Installation (AppImage)
-1. Download `Aether-1.0.0.AppImage`.
-2. Make it executable and launch:
-   ```bash
-   chmod +x Aether-1.0.0.AppImage
-   ./Aether-1.0.0.AppImage
-   ```
-> **Note**: The AppImage is a self-contained universal binary that runs on Ubuntu, Fedora, Arch, and any other Linux distribution — no installation required.
+### Linux Installation (AppImage / DEB)
+- **AppImage (Universal)**:
+  ```bash
+  chmod +x Aether-1.0.0.AppImage
+  ./Aether-1.0.0.AppImage
+  ```
+- **Debian / Ubuntu (.deb)**:
+  ```bash
+  sudo dpkg -i aether_1.0.0_amd64.deb
+  sudo apt-get install -f # Fix dependencies if needed
+  ```
 
 ---
 
