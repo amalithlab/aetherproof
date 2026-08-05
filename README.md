@@ -68,7 +68,7 @@ Visit the **[Latest Development Release](https://github.com/amalithlab/aetherpro
 2. **Select Working Workspace**:
    - Click ⚙️ **Settings** in the top-right corner.
    - Under **Current Working Workspace**, click **Change...** to select your target project folder.
-3. **Choose your Swarm Mode**:
+3. **Choose your Swarm Mode & Harness Tier**:
    - **Solo Agent:** Uses a single primary LLM provider to execute tasks step-by-step. Best for quick edits and linear tasks.
    - **Adversarial Swarm:** Launches a full multi-agent graph with specialized roles (Architect, Coder, Critic, Verifier) debating and verifying code logic.
    - **Round Table Swarm:** An iterative, consensus-driven debate format between equal agent partners.
@@ -77,6 +77,33 @@ Visit the **[Latest Development Release](https://github.com/amalithlab/aetherpro
    - Enter your API Key or custom endpoint URL and click **Verify Connection**.
    - Assign providers/models for each role (Architect, Coder, Critic, Verifier) or set a global **Primary Provider**.
 5. **Start Coding**: Type your instruction in the message prompt at the bottom and let the swarm execute!
+
+---
+
+## 🎯 Customizing Domain Specifications (`.md` Property Harnesses)
+
+Users can provide custom domain knowledge, business rules, and verification criteria to tailor AETHER IDE to any domain (Software, Research Papers, NSF Proposals, Medical, Legal, Business Plans, etc.):
+
+### Option 1: Direct Markdown File Path
+Pass any custom `.md` file path directly in your prompt:
+> *"AETHER, audit this section based on rules in `@/path/to/my_domain_rules.md`"*
+
+### Option 2: Project-Level Domain Folder (`.aether/domains/<name>/`)
+Create a custom domain folder inside your project's `.aether/` directory:
+```text
+my-project/
+└── .aether/
+    ├── config/
+    │   └── capabilities.yaml       # Override default model priorities per capability
+    └── domains/
+        └── my-custom-domain/
+            ├── index.md            # Primary domain rules & constraints
+            ├── rules.md            # Detailed verification guidelines
+            └── verification.md     # Custom verification scripts or criteria
+```
+
+### Option 3: Global User Domain (`~/.aether/domains/<name>/`)
+Place domain folders under your user home directory (`~/.aether/domains/`) to make custom domain knowledge available across **all workspaces** on your machine.
 
 ---
 
