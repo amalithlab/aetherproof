@@ -84,79 +84,72 @@ Visit the **[Latest Development Release](https://github.com/amalithlab/aetherpro
 
 ## 🌐 Installing & Using the Chrome Browser Extension
 
-The **AETHER Browser Extension** acts as a secure local **Browser Provider**, allowing research agents to navigate, search, extract content, download PDFs, and gather academic citations inside your authenticated Chrome browser session.
+The **AETHER Browser Extension** is included directly in this repository under `./aether-browser-extension`. It acts as a secure local **Browser Provider**, allowing research agents to navigate, search, extract content, download PDFs, and gather academic citations inside your authenticated Chrome browser session.
 
 ### 📥 Local Installation Guide (Developer Mode)
 
 1. Open **Google Chrome** and navigate to `chrome://extensions/`
 2. Enable **Developer mode** using the toggle switch in the top right corner.
 3. Click **Load unpacked** in the top left.
-4. Select the extension directory:
+4. Select the `aether-browser-extension` folder inside this repository:
    ```text
-   /Volumes/HDD/AMAV/aether-browser-extension
+   aether-browser-extension/
    ```
-5. Pin the **AETHER Browser Provider** icon to your extension bar.
-6. Open **AETHER IDE** — the extension will automatically connect via WebSocket on `ws://localhost:7823`. The status indicator in **Settings → Research Configuration** will turn 🟢 **Connected**.
+5. Pin the **AETHER Browser Extension** icon to your Chrome extension bar.
+6. Launch **AETHER IDE** — the extension will automatically connect via WebSocket on `ws://127.0.0.1:7823`. The status indicator in **Settings → Research Configuration** will turn 🟢 **Connected**.
 
-### ⚙️ Browser Research Agent Mapping
+---
 
-When **Browser Research Mode** is selected, research agents map to configured engines:
+### ⚙️ Swarm Research Agents Configuration (4 Agents)
 
-| Agent | Browser Search Engine | Default Search URL |
+AETHER IDE assigns research tasks to **4 specialized Swarm Research Agents**:
+
+| Swarm Agent | Default Role | Search Engine Dropdown Selection | Default Search Target / URL |
+| :--- | :--- | :--- | :--- |
+| **Agent 1** | **Architect Agent** | Dropdown Selector (Chrome Extension or API Provider) | `Google Scholar` (`https://scholar.google.com`) |
+| **Agent 2** | **Coder Agent** | Dropdown Selector (Chrome Extension or API Provider) | `PubMed` (`https://pubmed.ncbi.nlm.nih.gov`) |
+| **Agent 3** | **Critic Agent** | Dropdown Selector (Chrome Extension or API Provider) | `arXiv` (`https://arxiv.org`) |
+| **Agent 4** | **Verifier Agent** | Dropdown Selector (Chrome Extension or API Provider) | `IEEE Xplore` (`https://ieeexplore.ieee.org`) |
+
+Each of the 4 Swarm Research Agents has an interactive dropdown menu allowing users to select either a **Chrome Extension Engine** or an **API Search Provider**.
+
+#### Dropdown Selection Menu Options for Each Agent:
+- **Chrome Extension Engines** *(Requires AETHER Chrome Extension)*:
+  - `Google Scholar` (`https://scholar.google.com`)
+  - `PubMed` (`https://pubmed.ncbi.nlm.nih.gov`)
+  - `arXiv` (`https://arxiv.org`)
+  - `IEEE Xplore` (`https://ieeexplore.ieee.org`)
+  - `ACM Digital Library` (`https://dl.acm.org`)
+  - `Semantic Scholar` (`https://semanticscholar.org`)
+  - `Google Search` (`https://google.com`)
+  - `Bing Search` (`https://bing.com`)
+  - `Custom Web Search` (User inputs custom web search portal URL)
+- **API Search Providers**:
+  - `Google Gemini Grounding` *(Reuses Primary Gemini API Key)*
+  - `Tavily API` *(Uses Tavily API Key)*
+  - `Exa API` *(Uses Exa API Key)*
+  - `Brave Search API` *(Uses Brave API Key)*
+  - `SerpAPI` *(Uses SerpAPI Key)*
+  - `Google CSE` *(Uses Google CSE Key & Engine ID)*
+  - `Custom API Provider` *(Uses Custom API Endpoint & Key)*
+
+---
+
+### 🔑 How API Keys Work for Search Engines
+
+| Search Provider Selected | Key Requirement | How & Where It Works |
 | :--- | :--- | :--- |
-| **Agent 1** | Google Search | `https://google.com` |
-| **Agent 2** | Bing Search | `https://bing.com` |
-| **Agent 3** | Google Scholar | `https://scholar.google.com` |
-| **Agent 4** | PubMed | `https://pubmed.ncbi.nlm.nih.gov` |
-| **Agent 5** | arXiv | `https://arxiv.org` |
-| **Agent 6** | IEEE Xplore | `https://ieeexplore.ieee.org` |
-| **Agent 7** | ACM Digital Library | `https://dl.acm.org` |
-| **Agent 8** | Semantic Scholar | `https://semanticscholar.org` |
+| **Google Gemini Grounding** | **Primary Gemini Key** | Automatically reuses your primary **Google Gemini API Key** set under **Settings → Provider Registry**. No extra search API key required. |
+| **Tavily / Exa / Brave / Bing / Google CSE** | **Dedicated Provider Key** | Enter your API key in **Settings → Research Configuration → Search Provider Mode**. When selected by any of the 4 agents, the engine retrieves the corresponding saved key. |
+| **Chrome Extension Engines** | **No API Key Required** | Research queries execute directly via your local authenticated Chrome browser session over the local WebSocket/HTTP bridge (`127.0.0.1:7823`). |
 
-You can edit any search URL or click **+ Add Custom Search Engine** to add specialized portals (e.g., SpringerLink, Nature, JSTOR, library proxy URLs).
+---
 
 ### 🔒 Privacy & Security
 
-- All authentication remains entirely inside Chrome.
+- All browser logins, proxy sessions, and subscription access remain entirely inside Chrome.
 - **No passwords, cookies, or session tokens** are ever transmitted to the IDE or external LLM servers.
 - The extension executes standard DOM navigation and text extraction locally on your device.
-
-
----
-
-## 🎯 Customizing Domain Specifications (`.md` Property Harnesses)
-
-Users can provide custom domain knowledge, business rules, and verification criteria to tailor AETHER IDE to any domain (Software, Research Papers, NSF Proposals, Medical, Legal, Business Plans, etc.):
-
-### Option 1: Direct Markdown File Path
-Pass any custom `.md` file path directly in your prompt:
-> *"AETHER, audit this section based on rules in `@/path/to/my_domain_rules.md`"*
-
-### Option 2: Project-Level Domain Folder (`.aether/domains/<name>/`)
-Create a custom domain folder inside your project's `.aether/` directory:
-```text
-my-project/
-└── .aether/
-    ├── config/
-    │   └── capabilities.yaml       # Override default model priorities per capability
-    └── domains/
-        └── my-custom-domain/
-            ├── index.md            # Primary domain rules & constraints
-            ├── rules.md            # Detailed verification guidelines
-            └── verification.md     # Custom verification scripts or criteria
-```
-
-### Option 3: Global User Domain (`~/.aether/domains/<name>/`)
-Place domain folders under your user home directory (`~/.aether/domains/`) to make custom domain knowledge available across **all workspaces** on your machine.
-
----
-
-## 🔍 Search Engine & Web Research Configuration
-
-For tasks requiring live web research, academic literature lookup, or web crawling:
-
-1. **Gemini Search Grounding (Recommended & Free):** Set your **Global Swarm Default** to **Google Gemini** in Settings. Gemini's native search grounding will pull live Google Search results automatically with no extra search API key needed.
-2. **Dedicated Search APIs:** Configure API keys for `Tavily`, `Exa`, `Bing API`, or `Google Custom Search Engine` in the Web Search section of Settings.
 
 ---
 
