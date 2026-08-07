@@ -68,15 +68,59 @@ Visit the **[Latest Development Release](https://github.com/amalithlab/aetherpro
 2. **Select Working Workspace**:
    - Click ⚙️ **Settings** in the top-right corner.
    - Under **Current Working Workspace**, click **Change...** to select your target project folder.
-3. **Choose your Swarm Mode & Harness Tier**:
-   - **Solo Agent:** Uses a single primary LLM provider to execute tasks step-by-step. Best for quick edits and linear tasks.
-   - **Adversarial Swarm:** Launches a full multi-agent graph with specialized roles (Architect, Coder, Critic, Verifier) debating and verifying code logic.
-   - **Round Table Swarm:** An iterative, consensus-driven debate format between equal agent partners.
-4. **Configure LLM Providers**:
-   - Under **Provider Registry**, select your preferred platform (e.g. Google Gemini, DeepSeek, OpenAI, Anthropic, Ollama, etc.).
-   - Enter your API Key or custom endpoint URL and click **Verify Connection**.
-   - Assign providers/models for each role (Architect, Coder, Critic, Verifier) or set a global **Primary Provider**.
-5. **Start Coding**: Type your instruction in the message prompt at the bottom and let the swarm execute!
+3. **Choose your Swarm Mode & Swarm Type**:
+   - **Default Operating Mode**: **Round Table Swarm** (Iterative, consensus-driven collaborative debate format optimized for complex synthesis).
+   - **Default Swarm Type**: **Document Synthesis & Academic Research** (Tailored for literature review, scientific research, evidence collection, and paper writing).
+   - Other modes available: *Adversarial Swarm (4-Agents)*, *Solo Agent*.
+   - Other types available: *Software Development*, *Business Process Automation*, *Environment Diagnostics*.
+4. **Configure Research Mode & LLM Providers**:
+   - Under **Research Configuration**, choose between:
+     - **🔍 Search Provider Mode:** Uses API-based search providers (Gemini, Tavily, Exa, Bing, Brave, SerpAPI, Google CSE) for fast web searches.
+     - **🌐 Browser Research Mode (Recommended for Academic Research):** Connects to the **AETHER Browser Extension** in Google Chrome to operate using your local authenticated login session (Google Scholar, PubMed, arXiv, IEEE Xplore, ACM Digital Library, Semantic Scholar, university library portals, etc.).
+   - Under **Provider Registry**, select your preferred LLM platform (e.g. Google Gemini, DeepSeek, OpenAI, Anthropic, Ollama, etc.), enter your API Key, and click **Verify Connection**.
+5. **Start Coding / Researching**: Type your instruction in the message prompt at the bottom and let the swarm execute!
+
+---
+
+## 🌐 Installing & Using the Chrome Browser Extension
+
+The **AETHER Browser Extension** acts as a secure local **Browser Provider**, allowing research agents to navigate, search, extract content, download PDFs, and gather academic citations inside your authenticated Chrome browser session.
+
+### 📥 Local Installation Guide (Developer Mode)
+
+1. Open **Google Chrome** and navigate to `chrome://extensions/`
+2. Enable **Developer mode** using the toggle switch in the top right corner.
+3. Click **Load unpacked** in the top left.
+4. Select the extension directory:
+   ```text
+   /Volumes/HDD/AMAV/aether-browser-extension
+   ```
+5. Pin the **AETHER Browser Provider** icon to your extension bar.
+6. Open **AETHER IDE** — the extension will automatically connect via WebSocket on `ws://localhost:7823`. The status indicator in **Settings → Research Configuration** will turn 🟢 **Connected**.
+
+### ⚙️ Browser Research Agent Mapping
+
+When **Browser Research Mode** is selected, research agents map to configured engines:
+
+| Agent | Browser Search Engine | Default Search URL |
+| :--- | :--- | :--- |
+| **Agent 1** | Google Search | `https://google.com` |
+| **Agent 2** | Bing Search | `https://bing.com` |
+| **Agent 3** | Google Scholar | `https://scholar.google.com` |
+| **Agent 4** | PubMed | `https://pubmed.ncbi.nlm.nih.gov` |
+| **Agent 5** | arXiv | `https://arxiv.org` |
+| **Agent 6** | IEEE Xplore | `https://ieeexplore.ieee.org` |
+| **Agent 7** | ACM Digital Library | `https://dl.acm.org` |
+| **Agent 8** | Semantic Scholar | `https://semanticscholar.org` |
+
+You can edit any search URL or click **+ Add Custom Search Engine** to add specialized portals (e.g., SpringerLink, Nature, JSTOR, library proxy URLs).
+
+### 🔒 Privacy & Security
+
+- All authentication remains entirely inside Chrome.
+- **No passwords, cookies, or session tokens** are ever transmitted to the IDE or external LLM servers.
+- The extension executes standard DOM navigation and text extraction locally on your device.
+
 
 ---
 
