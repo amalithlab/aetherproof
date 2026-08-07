@@ -145,11 +145,53 @@ Each of the 4 Swarm Research Agents has an interactive dropdown menu allowing us
 
 ---
 
-### 🔒 Privacy & Security
+## 🛠️ Developing & Using Custom Skills & User Profiles
 
-- All browser logins, proxy sessions, and subscription access remain entirely inside Chrome.
-- **No passwords, cookies, or session tokens** are ever transmitted to the IDE or external LLM servers.
-- The extension executes standard DOM navigation and text extraction locally on your device.
+AETHER IDE features a **Harness-Engineered Skill & Profile System** (`.aether/skills/` and `~/.aether/skills/`). Users can define, download, or share custom domain skills (`SKILL.md`) to guide the swarm agents for specialized workflows (e.g., NSF Grant proposals, academic math papers, business meetings, code refactoring).
+
+### 📁 Directory Layout
+
+```text
+~/.aether/                                 # Global user settings & skills across all projects
+├── profile.yaml                           # User persona, role defaults & global preferences
+├── user.md                                # Hard constraints & formatting instructions
+└── skills/                                # Global user skills
+    ├── nsf-proposal/
+    │   └── SKILL.md
+    ├── math-paper/
+    │   └── SKILL.md
+    └── business-strategy/
+        └── SKILL.md
+
+.aether/                                   # Workspace-level project skills
+└── skills/                                # Project-specific custom skills
+    └── my-custom-skill/
+        └── SKILL.md
+```
+
+### ✍️ Creating a Custom Skill (`SKILL.md`)
+
+Each skill is a simple directory containing a `SKILL.md` file with YAML frontmatter metadata:
+
+```markdown
+---
+name: nsf-proposal
+description: NSF Proposal Drafting & Compliance (Intellectual Merit, Broader Impacts, Budget & Citations)
+domain: research
+---
+
+# NSF Proposal Writing Skill
+
+## Instructions
+- Ensure every proposal section explicitly addresses **Intellectual Merit** and **Broader Impacts**.
+- Maintain strict page and word budget constraints per NSF Grant Proposal Guide (GPG) guidelines.
+- Format all literature references with complete author, venue, year, DOI, and BibTeX metadata.
+```
+
+### 📥 Installing & Downloading Community Skills
+To add a new skill (e.g., a community skill downloaded online for NSF proposals, arXiv paper writing, or business strategy):
+1. Copy the skill folder directly into your workspace `.aether/skills/` directory or your global `~/.aether/skills/` folder.
+2. Open **Settings → Skills & User Profiles** in AETHER IDE to toggle skills on or off.
 
 ---
 
