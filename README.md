@@ -147,7 +147,10 @@ Each of the 4 Swarm Research Agents has an interactive dropdown menu allowing us
 
 ## 🛠️ Developing & Using Custom Skills & User Profiles
 
-AETHER IDE features a **Harness-Engineered Skill & Profile System** (`.aether/skills/` and `~/.aether/skills/`). Users can define, download, or share custom domain skills (`SKILL.md`) to guide the swarm agents for specialized workflows (e.g., NSF Grant proposals, academic math papers, business meetings, code refactoring).
+AETHER IDE features a **Harness-Engineered Skill & Profile System** (`.aether/skills/` and `~/.aether/skills/`) that follows the **Anthropic Claude Code & Codex Open Agent Skill Standard**.
+
+> [!NOTE]
+> **Claude Code & Codex Interoperability**: Because AETHER IDE uses the standard directory structure (`skills/<skill_name>/SKILL.md`) and YAML frontmatter (`name`, `description`, `domain`), **any skill built for Claude Code or Codex can be dropped directly into AETHER IDE without modification**, and vice-versa!
 
 ### 📁 Directory Layout
 
