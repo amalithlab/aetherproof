@@ -188,10 +188,23 @@ domain: research
 - Format all literature references with complete author, venue, year, DOI, and BibTeX metadata.
 ```
 
+### 🧠 Automatic Intelligent Skill Routing
+
+AETHER IDE includes an **Automatic Task Classifier & Intent Router**. The orchestrator automatically evaluates the user's prompt (and selected Project Swarm Type) to detect intent and load the relevant skills dynamically:
+
+| Task Intent Detected | Matched Keywords / Project Type | Automatically Loaded Skill |
+| :--- | :--- | :--- |
+| **NSF Proposal Writing** | `NSF`, `grant`, `proposal`, `Intellectual Merit`, `Broader Impacts` | `nsf-proposal/SKILL.md` |
+| **Academic Math & Proofs** | `math`, `theorem`, `proof`, `LaTeX`, `SymPy`, `Jacobian`, `equation` | `math-paper/SKILL.md` |
+| **Business Strategy** | `business`, `strategy`, `market`, `TAM`, `executive`, `financial` | `business-strategy/SKILL.md` |
+| **Software Engineering** | `code`, `refactor`, `bug`, `test`, `feature` OR Swarm Type: `software` | `software-engineering/SKILL.md` |
+
+Users can also manually toggle skills on or off in **Settings → Skills & User Profiles**.
+
 ### 📥 Installing & Downloading Community Skills
 To add a new skill (e.g., a community skill downloaded online for NSF proposals, arXiv paper writing, or business strategy):
 1. Copy the skill folder directly into your workspace `.aether/skills/` directory or your global `~/.aether/skills/` folder.
-2. Open **Settings → Skills & User Profiles** in AETHER IDE to toggle skills on or off.
+2. Open **Settings → Skills & User Profiles** in AETHER IDE to view or toggle active skills.
 
 ---
 
