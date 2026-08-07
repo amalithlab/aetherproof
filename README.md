@@ -188,23 +188,23 @@ domain: research
 - Format all literature references with complete author, venue, year, DOI, and BibTeX metadata.
 ```
 
-### 🧠 Automatic Intelligent Skill Routing
+### 🎯 Explicit User Skill Specification
 
-AETHER IDE includes an **Automatic Task Classifier & Intent Router**. The orchestrator automatically evaluates the user's prompt (and selected Project Swarm Type) to detect intent and load the relevant skills dynamically:
+Users can explicitly force specific skills to load for a task in **3 flexible ways**:
 
-| Task Intent Detected | Matched Keywords / Project Type | Automatically Loaded Skill |
-| :--- | :--- | :--- |
-| **NSF Proposal Writing** | `NSF`, `grant`, `proposal`, `Intellectual Merit`, `Broader Impacts` | `nsf-proposal/SKILL.md` |
-| **Academic Math & Proofs** | `math`, `theorem`, `proof`, `LaTeX`, `SymPy`, `Jacobian`, `equation` | `math-paper/SKILL.md` |
-| **Business Strategy** | `business`, `strategy`, `market`, `TAM`, `executive`, `financial` | `business-strategy/SKILL.md` |
-| **Software Engineering** | `code`, `refactor`, `bug`, `test`, `feature` OR Swarm Type: `software` | `software-engineering/SKILL.md` |
+1. **In-Prompt Tagging**: Include `@skill:<name>` or `@<name>` in your chat prompt:
+   > *"AETHER, draft Section 2 of my grant proposal using @nsf-proposal and @math-paper"*
+2. **Settings Panel Checkboxes**: Check or uncheck active skills in **Settings → Skills & User Profiles**.
+3. **Workspace Configuration**: Add default active skills to `.aether/config.json`.
 
-Users can also manually toggle skills on or off in **Settings → Skills & User Profiles**.
+---
 
-### 📥 Installing & Downloading Community Skills
-To add a new skill (e.g., a community skill downloaded online for NSF proposals, arXiv paper writing, or business strategy):
-1. Copy the skill folder directly into your workspace `.aether/skills/` directory or your global `~/.aether/skills/` folder.
-2. Open **Settings → Skills & User Profiles** in AETHER IDE to view or toggle active skills.
+### 🔄 Layered Dynamic Skill Discovery & User Permission Policy
+
+Skill loading is **layered and progressive**:
+1. **Initial Layer (Automatic & Explicit)**: The orchestrator loads explicit user skills (`@nsf-proposal`) and intent-matched skills at task launch.
+2. **Runtime Layer (Agent-Driven Discovery)**: During agent discussion, if an agent determines that an additional local skill is needed (e.g. `read_file(".aether/skills/latex-check/SKILL.md")`), it dynamically fetches and applies the skill rules without interrupting execution.
+3. **External Download Permission**: If an agent recommends downloading a **new external community skill** from an online registry, **the IDE prompts the user for explicit permission** before writing files to your device.
 
 ---
 
