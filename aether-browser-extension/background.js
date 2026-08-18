@@ -274,6 +274,39 @@ async function apiExtractCitations(tabId) {
   }
 }
 
+// Persistent Tab Cache — reuses existing open chat history tabs for multi-turn conversational context
+const activeChatTabs = new Map();
+
+async function getOrCreatePersistentTab(serviceKey, defaultUrl) {
+  let existingTabId = activeChatTabs.get(serviceKey);
+  if (existingTabId) {
+    try {
+      const tab = await chrome.tabs.get(existingTabId);
+      if (tab && !tab.discarded) {
+        return tab;
+      }
+    } catch (e) {
+      activeChatTabs.delete(serviceKey);
+    }
+  }
+
+  // Find existing open tab matching host if available
+  try {
+    const matchingTabs = await chrome.tabs.query({ url: `${new URL(defaultUrl).origin}/*` });
+    if (matchingTabs.length > 0) {
+      const reuseTab = matchingTabs[0];
+      activeChatTabs.set(serviceKey, reuseTab.id);
+      return reuseTab;
+    }
+  } catch (e) {}
+
+  // Otherwise create a new tab and save to cache
+  const tab = await chrome.tabs.create({ url: defaultUrl, active: false });
+  await waitForTabLoad(tab.id);
+  activeChatTabs.set(serviceKey, tab.id);
+  return tab;
+}
+
 async function apiAskGemini(prompt) {
   // Try Chrome built-in AI (window.ai) first if available
   try {
@@ -297,14 +330,12 @@ async function apiAskGemini(prompt) {
     }
   } catch (e) {}
 
-  // Fallback to Web Gemini UI (gemini.google.com)
-  const tab = await chrome.tabs.create({ url: "https://gemini.google.com/app", active: false });
-  await waitForTabLoad(tab.id);
+  // Reuse existing open chat tab for multi-turn history continuity
+  const tab = await getOrCreatePersistentTab("gemini", "https://gemini.google.com/app");
   
   const result = await chrome.scripting.executeScript({
     target: { tabId: tab.id },
     func: async (p) => {
-      // Find Gemini prompt input area
       const input = document.querySelector('div[role="textbox"], textarea, [contenteditable="true"], .ql-editor');
       if (input) {
         input.focus();
@@ -315,16 +346,14 @@ async function apiAskGemini(prompt) {
         
         await new Promise(r => setTimeout(r, 500));
 
-        // Gemini uses button.send-button, mat-icon send, or button[aria-label*="Send"] / button[aria-label*="Submit"]
         const sendBtn = document.querySelector('button[aria-label*="Send"] button, button[aria-label*="Submit"], button.send-button, button[aria-label*="Send message"], button[aria-label*="Send"], .send-button button');
         if (sendBtn) {
           sendBtn.click();
         } else {
-          // Fallback: Dispatch Enter key event on the input
           input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', keyCode: 13, bubbles: true }));
         }
       }
-      await new Promise(r => setTimeout(r, 7500)); // wait for response stream
+      await new Promise(r => setTimeout(r, 7500));
       return {
         title: document.title,
         url: window.location.href,
@@ -339,8 +368,7 @@ async function apiAskGemini(prompt) {
 }
 
 async function apiAskChatGPT(prompt) {
-  const tab = await chrome.tabs.create({ url: "https://chatgpt.com", active: false });
-  await waitForTabLoad(tab.id);
+  const tab = await getOrCreatePersistentTab("chatgpt", "https://chatgpt.com");
   const result = await chrome.scripting.executeScript({
     target: { tabId: tab.id },
     func: async (p) => {
@@ -370,9 +398,7 @@ async function apiAskChatGPT(prompt) {
 }
 
 async function apiAskClaude(prompt) {
-  // Navigate directly to new chat interface on Claude.ai
-  const tab = await chrome.tabs.create({ url: "https://claude.ai/new", active: false });
-  await waitForTabLoad(tab.id);
+  const tab = await getOrCreatePersistentTab("claude", "https://claude.ai/new");
   const result = await chrome.scripting.executeScript({
     target: { tabId: tab.id },
     func: async (p) => {
@@ -401,8 +427,8 @@ async function apiAskClaude(prompt) {
 }
 
 async function apiAskCustomWebLLM(prompt, targetUrl = "https://chat.deepseek.com/") {
-  const tab = await chrome.tabs.create({ url: targetUrl, active: false });
-  await waitForTabLoad(tab.id);
+  const serviceKey = "custom_" + new URL(targetUrl).hostname;
+  const tab = await getOrCreatePersistentTab(serviceKey, targetUrl);
   const result = await chrome.scripting.executeScript({
     target: { tabId: tab.id },
     func: async (p) => {
@@ -414,7 +440,7 @@ async function apiAskCustomWebLLM(prompt, targetUrl = "https://chat.deepseek.com
         const sendBtn = document.querySelector('button[type="submit"], button[aria-label*="Send"], button[aria-label*="Submit"], div[role="button"]');
         if (sendBtn) sendBtn.click();
       }
-      await new Promise(r => setTimeout(r, 7000));
+      await new Promise(r => setTimeout(r, 7500));
       return {
         title: document.title,
         url: window.location.href,
