@@ -26,13 +26,19 @@ function connectToIDE() {
         reconnectTimer = null;
       }
 
-      // Heartbeat ping every 15s to keep MV3 Service Worker alive
+      // Heartbeat ping every 3s to prevent MV3 Service Worker idle termination
       if (keepAliveTimer) clearInterval(keepAliveTimer);
       keepAliveTimer = setInterval(() => {
         if (socket && socket.readyState === WebSocket.OPEN) {
-          socket.send(JSON.stringify({ type: "PING", timestamp: Date.now() }));
+          try {
+            socket.send(JSON.stringify({ type: "PING", timestamp: Date.now() }));
+          } catch (e) {
+            scheduleReconnect();
+          }
+        } else {
+          scheduleReconnect();
         }
-      }, 15000);
+      }, 3000);
 
       // Send registration message
       socket.send(JSON.stringify({
@@ -113,6 +119,9 @@ async function handleBrowserApiRequest(action, args) {
     case "browser.readPage": return await apiReadPage(args.tabId);
     case "browser.extractContent": return await apiExtractContent(args.tabId);
     case "browser.extractCitations": return await apiExtractCitations(args.tabId);
+    case "browser.askGemini": return await apiAskGemini(args.prompt);
+    case "browser.askChatGPT": return await apiAskChatGPT(args.prompt);
+    case "browser.askClaude": return await apiAskClaude(args.prompt);
     case "browser.downloadPDF": return await apiDownloadPDF(args.url);
     case "browser.readPDF": return await apiReadPDF(args.tabId);
     case "browser.followCitation": return await apiFollowCitation(args.citationOrDoi);
@@ -241,9 +250,112 @@ async function apiExtractCitations(tabId) {
     });
     return results[0]?.result || { citations: [] };
   } catch (e) {
-    return { error: e.message, citations: [] };
-  }
+async function apiAskGemini(prompt) {
+  // Try Chrome built-in AI (window.ai) first if available
+  try {
+    const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (activeTab) {
+      const windowAiRes = await chrome.scripting.executeScript({
+        target: { tabId: activeTab.id },
+        func: async (p) => {
+          if (window.ai && window.ai.languageModel) {
+            const session = await window.ai.languageModel.create();
+            const result = await session.prompt(p);
+            return { response: result, engine: "chrome_window_ai" };
+          }
+          return null;
+        },
+        args: [prompt]
+      });
+      if (windowAiRes[0]?.result) {
+        return windowAiRes[0].result;
+      }
+    }
+  } catch (e) {}
+
+  // Fallback to Web Gemini UI (gemini.google.com)
+  const tab = await chrome.tabs.create({ url: "https://gemini.google.com/app", active: false });
+  await waitForTabLoad(tab.id);
+  
+  // Resilient text injection and innerText extraction (no CSS class dependencies)
+  const result = await chrome.scripting.executeScript({
+    target: { tabId: tab.id },
+    func: async (p) => {
+      const input = document.querySelector('textarea, [contenteditable="true"], div[role="textbox"]');
+      if (input) {
+        if (input.tagName === 'TEXTAREA') input.value = p;
+        else input.innerText = p;
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        const sendBtn = document.querySelector('button[aria-label*="Send"], button[aria-label*="Submit"], button.send-button');
+        if (sendBtn) sendBtn.click();
+      }
+      await new Promise(r => setTimeout(r, 6000)); // wait for response stream
+      return {
+        title: document.title,
+        url: window.location.href,
+        response: document.body ? document.body.innerText.substring(0, 15000) : "",
+        engine: "gemini_web_ui"
+      };
+    },
+    args: [prompt]
+  });
+  
+  return result[0]?.result || { error: "Gemini query timed out" };
 }
+
+async function apiAskChatGPT(prompt) {
+  const tab = await chrome.tabs.create({ url: "https://chatgpt.com", active: false });
+  await waitForTabLoad(tab.id);
+  const result = await chrome.scripting.executeScript({
+    target: { tabId: tab.id },
+    func: async (p) => {
+      const input = document.querySelector('#prompt-textarea, textarea, [contenteditable="true"]');
+      if (input) {
+        if (input.tagName === 'TEXTAREA') input.value = p;
+        else input.innerText = p;
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        const sendBtn = document.querySelector('button[data-testid="send-button"], button[aria-label*="Send"]');
+        if (sendBtn) sendBtn.click();
+      }
+      await new Promise(r => setTimeout(r, 6000));
+      return {
+        title: document.title,
+        url: window.location.href,
+        response: document.body ? document.body.innerText.substring(0, 15000) : "",
+        engine: "chatgpt_web_ui"
+      };
+    },
+    args: [prompt]
+  });
+  return result[0]?.result || { error: "ChatGPT query timed out" };
+}
+
+async function apiAskClaude(prompt) {
+  const tab = await chrome.tabs.create({ url: "https://claude.ai/chats", active: false });
+  await waitForTabLoad(tab.id);
+  const result = await chrome.scripting.executeScript({
+    target: { tabId: tab.id },
+    func: async (p) => {
+      const input = document.querySelector('[contenteditable="true"], textarea');
+      if (input) {
+        input.innerText = p;
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        const sendBtn = document.querySelector('button[aria-label*="Send"]');
+        if (sendBtn) sendBtn.click();
+      }
+      await new Promise(r => setTimeout(r, 6000));
+      return {
+        title: document.title,
+        url: window.location.href,
+        response: document.body ? document.body.innerText.substring(0, 15000) : "",
+        engine: "claude_web_ui"
+      };
+    },
+    args: [prompt]
+  });
+  return result[0]?.result || { error: "Claude query timed out" };
+}
+
 
 async function apiDownloadPDF(url) {
   return new Promise((resolve) => {
@@ -303,6 +415,16 @@ async function getActiveTabId() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   return tab?.id;
 }
+
+// Listen for Chrome Alarm wake-up to keep Service Worker alive in MV3
+chrome.alarms.create("aether_ws_keepalive", { periodInMinutes: 0.5 });
+chrome.alarms.onAlarm.addListener((alarm) => {
+  if (alarm.name === "aether_ws_keepalive") {
+    if (!socket || socket.readyState !== WebSocket.OPEN) {
+      connectToIDE();
+    }
+  }
+});
 
 // Connect on worker startup
 connectToIDE();
