@@ -368,7 +368,27 @@ async function apiAskGemini(prompt) {
           input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', keyCode: 13, bubbles: true }));
         }
       }
-      await new Promise(r => setTimeout(r, 7500));
+      
+      // Dynamic Stream Completion Polling: Wait for Gemini to finish outputting (up to 120s max)
+      async function waitForStreamComplete(maxMs = 120000) {
+        let lastLength = 0;
+        let stableCount = 0;
+        const startTime = Date.now();
+        
+        while (Date.now() - startTime < maxMs) {
+          await new Promise(r => setTimeout(r, 2000));
+          const currentLength = document.body ? document.body.innerText.length : 0;
+          if (currentLength > 0 && currentLength === lastLength) {
+            stableCount++;
+            if (stableCount >= 2) break;
+          } else {
+            stableCount = 0;
+            lastLength = currentLength;
+          }
+        }
+      }
+
+      await waitForStreamComplete(120000);
       return {
         title: document.title,
         url: window.location.href,
@@ -407,7 +427,26 @@ async function apiAskChatGPT(prompt) {
           input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true }));
         }
       }
-      await new Promise(r => setTimeout(r, 8000));
+
+      async function waitForStreamComplete(maxMs = 120000) {
+        let lastLength = 0;
+        let stableCount = 0;
+        const startTime = Date.now();
+        
+        while (Date.now() - startTime < maxMs) {
+          await new Promise(r => setTimeout(r, 2000));
+          const currentLength = document.body ? document.body.innerText.length : 0;
+          if (currentLength > 0 && currentLength === lastLength) {
+            stableCount++;
+            if (stableCount >= 2) break;
+          } else {
+            stableCount = 0;
+            lastLength = currentLength;
+          }
+        }
+      }
+
+      await waitForStreamComplete(120000);
       return {
         title: document.title,
         url: window.location.href,
