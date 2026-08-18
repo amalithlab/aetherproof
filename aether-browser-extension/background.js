@@ -274,15 +274,29 @@ async function apiExtractCitations(tabId) {
   }
 }
 
-// Persistent Tab Cache — reuses existing open chat history tabs for multi-turn conversational context
+// Persistent Tab Cache — reuses open chat history tabs & recycles them when context limits are hit
 const activeChatTabs = new Map();
+const tabTurnCounts = new Map();
+const MAX_TURNS_PER_CHAT = 12; // Auto-recycle chat after 12 turns to prevent context window overflow
 
-async function getOrCreatePersistentTab(serviceKey, defaultUrl) {
+async function getOrCreatePersistentTab(serviceKey, defaultUrl, forceNew = false) {
   let existingTabId = activeChatTabs.get(serviceKey);
+  let currentTurns = tabTurnCounts.get(serviceKey) || 0;
+
+  if (forceNew || currentTurns >= MAX_TURNS_PER_CHAT) {
+    if (existingTabId) {
+      try { await chrome.tabs.remove(existingTabId); } catch(e) {}
+    }
+    activeChatTabs.delete(serviceKey);
+    tabTurnCounts.set(serviceKey, 0);
+    existingTabId = null;
+  }
+
   if (existingTabId) {
     try {
       const tab = await chrome.tabs.get(existingTabId);
       if (tab && !tab.discarded) {
+        tabTurnCounts.set(serviceKey, currentTurns + 1);
         return tab;
       }
     } catch (e) {
@@ -290,21 +304,22 @@ async function getOrCreatePersistentTab(serviceKey, defaultUrl) {
     }
   }
 
-  // Find existing open tab matching host if available
-  try {
-    const matchingTabs = await chrome.tabs.query({ url: `${new URL(defaultUrl).origin}/*` });
-    if (matchingTabs.length > 0) {
-      const reuseTab = matchingTabs[0];
-      activeChatTabs.set(serviceKey, reuseTab.id);
-      return reuseTab;
-    }
-  } catch (e) {}
-
-  // Otherwise create a new tab and save to cache
+  // Otherwise create a fresh new tab and save to cache
   const tab = await chrome.tabs.create({ url: defaultUrl, active: false });
   await waitForTabLoad(tab.id);
   activeChatTabs.set(serviceKey, tab.id);
+  tabTurnCounts.set(serviceKey, 1);
   return tab;
+}
+
+function detectContextLimitError(pageText) {
+  const lower = pageText.toLowerCase();
+  return lower.includes("conversation is too long") ||
+         lower.includes("context length exceeded") ||
+         lower.includes("message limit reached") ||
+         lower.includes("too many messages") ||
+         lower.includes("start a new chat") ||
+         lower.includes("free tier limit");
 }
 
 async function apiAskGemini(prompt) {
