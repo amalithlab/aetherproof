@@ -282,10 +282,10 @@ async function apiAskGemini(prompt) {
       const windowAiRes = await chrome.scripting.executeScript({
         target: { tabId: activeTab.id },
         func: async (p) => {
-          if (window.ai && window.ai.languageModel) {
+          if (typeof window.ai !== 'undefined' && window.ai.languageModel) {
             const session = await window.ai.languageModel.create();
-            const result = await session.prompt(p);
-            return { response: result, engine: "chrome_window_ai" };
+            const response = await session.prompt(p);
+            return { response, engine: "window.ai" };
           }
           return null;
         },
@@ -301,19 +301,30 @@ async function apiAskGemini(prompt) {
   const tab = await chrome.tabs.create({ url: "https://gemini.google.com/app", active: false });
   await waitForTabLoad(tab.id);
   
-  // Resilient text injection and innerText extraction (no CSS class dependencies)
   const result = await chrome.scripting.executeScript({
     target: { tabId: tab.id },
     func: async (p) => {
-      const input = document.querySelector('textarea, [contenteditable="true"], div[role="textbox"]');
+      // Find Gemini prompt input area
+      const input = document.querySelector('div[role="textbox"], textarea, [contenteditable="true"], .ql-editor');
       if (input) {
+        input.focus();
         if (input.tagName === 'TEXTAREA') input.value = p;
         else input.innerText = p;
         input.dispatchEvent(new Event('input', { bubbles: true }));
-        const sendBtn = document.querySelector('button[aria-label*="Send"], button[aria-label*="Submit"], button.send-button');
-        if (sendBtn) sendBtn.click();
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+        
+        await new Promise(r => setTimeout(r, 500));
+
+        // Gemini uses button.send-button, mat-icon send, or button[aria-label*="Send"] / button[aria-label*="Submit"]
+        const sendBtn = document.querySelector('button[aria-label*="Send"] button, button[aria-label*="Submit"], button.send-button, button[aria-label*="Send message"], button[aria-label*="Send"], .send-button button');
+        if (sendBtn) {
+          sendBtn.click();
+        } else {
+          // Fallback: Dispatch Enter key event on the input
+          input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', keyCode: 13, bubbles: true }));
+        }
       }
-      await new Promise(r => setTimeout(r, 6000)); // wait for response stream
+      await new Promise(r => setTimeout(r, 7500)); // wait for response stream
       return {
         title: document.title,
         url: window.location.href,
@@ -335,13 +346,17 @@ async function apiAskChatGPT(prompt) {
     func: async (p) => {
       const input = document.querySelector('#prompt-textarea, textarea, [contenteditable="true"]');
       if (input) {
+        input.focus();
         if (input.tagName === 'TEXTAREA') input.value = p;
         else input.innerText = p;
         input.dispatchEvent(new Event('input', { bubbles: true }));
+        
+        await new Promise(r => setTimeout(r, 500));
         const sendBtn = document.querySelector('button[data-testid="send-button"], button[aria-label*="Send"]');
         if (sendBtn) sendBtn.click();
+        else input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', keyCode: 13, bubbles: true }));
       }
-      await new Promise(r => setTimeout(r, 6000));
+      await new Promise(r => setTimeout(r, 7500));
       return {
         title: document.title,
         url: window.location.href,
@@ -355,19 +370,24 @@ async function apiAskChatGPT(prompt) {
 }
 
 async function apiAskClaude(prompt) {
-  const tab = await chrome.tabs.create({ url: "https://claude.ai/chats", active: false });
+  // Navigate directly to new chat interface on Claude.ai
+  const tab = await chrome.tabs.create({ url: "https://claude.ai/new", active: false });
   await waitForTabLoad(tab.id);
   const result = await chrome.scripting.executeScript({
     target: { tabId: tab.id },
     func: async (p) => {
-      const input = document.querySelector('[contenteditable="true"], textarea');
+      const input = document.querySelector('[contenteditable="true"], textarea, div[role="textbox"]');
       if (input) {
+        input.focus();
         input.innerText = p;
         input.dispatchEvent(new Event('input', { bubbles: true }));
-        const sendBtn = document.querySelector('button[aria-label*="Send"]');
+        
+        await new Promise(r => setTimeout(r, 500));
+        const sendBtn = document.querySelector('button[aria-label*="Send"], button[aria-label*="Submit"], button[type="submit"]');
         if (sendBtn) sendBtn.click();
+        else input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', keyCode: 13, bubbles: true }));
       }
-      await new Promise(r => setTimeout(r, 6000));
+      await new Promise(r => setTimeout(r, 7500));
       return {
         title: document.title,
         url: window.location.href,
