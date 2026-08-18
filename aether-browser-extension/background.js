@@ -141,6 +141,7 @@ async function handleBrowserApiRequest(action, args) {
     case "browser.askChatGPT": return await apiAskChatGPT(args.prompt);
     case "browser.askClaude": return await apiAskClaude(args.prompt);
     case "browser.askCustomWebLLM": return await apiAskCustomWebLLM(args.prompt, args.url);
+    case "browser.checkLoginStatus": return await apiCheckLoginStatus(args.target);
     case "browser.downloadPDF": return await apiDownloadPDF(args.url);
     case "browser.readPDF": return await apiReadPDF(args.tabId);
     case "browser.followCitation": return await apiFollowCitation(args.citationOrDoi);
@@ -478,3 +479,31 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 
 // Connect on worker startup
 connectToIDE();
+
+async function apiCheckLoginStatus(target = "gemini") {
+  const urlMap = {
+    gemini: "https://gemini.google.com/app",
+    chatgpt: "https://chatgpt.com",
+    claude: "https://claude.ai/chats",
+    deepseek: "https://chat.deepseek.com/"
+  };
+  const targetUrl = urlMap[target.toLowerCase()] || "https://gemini.google.com/app";
+  const tab = await chrome.tabs.create({ url: targetUrl, active: false });
+  await waitForTabLoad(tab.id);
+  const result = await chrome.scripting.executeScript({
+    target: { tabId: tab.id },
+    func: () => {
+      const pageText = document.body ? document.body.innerText.toLowerCase() : "";
+      const isLoggedOut = pageText.includes("sign in") || pageText.includes("log in") || pageText.includes("welcome back");
+      const hasInput = !!document.querySelector('textarea, [contenteditable="true"], div[role="textbox"], #prompt-textarea');
+      return {
+        isLoggedIn: hasInput && !isLoggedOut,
+        url: window.location.href,
+        title: document.title
+      };
+    }
+  });
+  try { await chrome.tabs.remove(tab.id); } catch(e) {}
+  return result[0]?.result || { isLoggedIn: false, error: "Verification timed out" };
+}
+
