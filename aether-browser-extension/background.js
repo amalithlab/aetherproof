@@ -372,19 +372,27 @@ async function apiAskChatGPT(prompt) {
   const result = await chrome.scripting.executeScript({
     target: { tabId: tab.id },
     func: async (p) => {
-      const input = document.querySelector('#prompt-textarea, textarea, [contenteditable="true"]');
+      const input = document.querySelector('#prompt-textarea, textarea, [contenteditable="true"], div[role="textbox"]');
       if (input) {
         input.focus();
-        if (input.tagName === 'TEXTAREA') input.value = p;
-        else input.innerText = p;
+        if (input.tagName === 'TEXTAREA') {
+          input.value = p;
+        } else {
+          document.execCommand('insertText', false, p);
+          if (!input.innerText.trim()) input.innerText = p;
+        }
         input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.dispatchEvent(new Event('change', { bubbles: true }));
         
-        await new Promise(r => setTimeout(r, 500));
-        const sendBtn = document.querySelector('button[data-testid="send-button"], button[aria-label*="Send"]');
-        if (sendBtn) sendBtn.click();
-        else input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', keyCode: 13, bubbles: true }));
+        await new Promise(r => setTimeout(r, 600));
+        const sendBtn = document.querySelector('button[data-testid="send-button"], button[aria-label*="Send"], button[aria-label*="Submit"]');
+        if (sendBtn && !sendBtn.disabled) {
+          sendBtn.click();
+        } else {
+          input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true }));
+        }
       }
-      await new Promise(r => setTimeout(r, 7500));
+      await new Promise(r => setTimeout(r, 8000));
       return {
         title: document.title,
         url: window.location.href,
@@ -402,18 +410,27 @@ async function apiAskClaude(prompt) {
   const result = await chrome.scripting.executeScript({
     target: { tabId: tab.id },
     func: async (p) => {
-      const input = document.querySelector('[contenteditable="true"], textarea, div[role="textbox"]');
+      // Find Claude contenteditable input area (ProseMirror / div[contenteditable="true"])
+      const input = document.querySelector('.ProseMirror, div[contenteditable="true"], textarea, div[role="textbox"]');
       if (input) {
         input.focus();
-        input.innerText = p;
+        // Use document.execCommand to reliably update ProseMirror internal state
+        const inserted = document.execCommand('insertText', false, p);
+        if (!inserted || !input.innerText.trim()) {
+          input.innerText = p;
+        }
         input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.dispatchEvent(new Event('change', { bubbles: true }));
         
-        await new Promise(r => setTimeout(r, 500));
-        const sendBtn = document.querySelector('button[aria-label*="Send"], button[aria-label*="Submit"], button[type="submit"]');
-        if (sendBtn) sendBtn.click();
-        else input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', keyCode: 13, bubbles: true }));
+        await new Promise(r => setTimeout(r, 600));
+        const sendBtn = document.querySelector('button[aria-label*="Send"], button[aria-label*="Submit"], button[type="submit"], button.bg-accent-main-100');
+        if (sendBtn && !sendBtn.disabled) {
+          sendBtn.click();
+        } else {
+          input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true }));
+        }
       }
-      await new Promise(r => setTimeout(r, 7500));
+      await new Promise(r => setTimeout(r, 8000));
       return {
         title: document.title,
         url: window.location.href,
