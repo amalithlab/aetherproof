@@ -354,18 +354,22 @@ async function apiAskGemini(prompt) {
       const input = document.querySelector('div[role="textbox"], textarea, [contenteditable="true"], .ql-editor');
       if (input) {
         input.focus();
-        if (input.tagName === 'TEXTAREA') input.value = p;
-        else input.innerText = p;
+        if (input.tagName === 'TEXTAREA') {
+          input.value = p;
+        } else {
+          document.execCommand('insertText', false, p);
+          if (!input.innerText.trim()) input.innerText = p;
+        }
         input.dispatchEvent(new Event('input', { bubbles: true }));
         input.dispatchEvent(new Event('change', { bubbles: true }));
         
-        await new Promise(r => setTimeout(r, 500));
+        await new Promise(r => setTimeout(r, 600));
 
-        const sendBtn = document.querySelector('button[aria-label*="Send"] button, button[aria-label*="Submit"], button.send-button, button[aria-label*="Send message"], button[aria-label*="Send"], .send-button button');
-        if (sendBtn) {
+        const sendBtn = document.querySelector('button[aria-label*="Send"] button, button[aria-label*="Submit"], button.send-button, button[aria-label*="Send message"], button[aria-label*="Send"], .send-button button, div[role="button"][aria-label*="Send"]');
+        if (sendBtn && !sendBtn.disabled) {
           sendBtn.click();
         } else {
-          input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', keyCode: 13, bubbles: true }));
+          input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true }));
         }
       }
       
