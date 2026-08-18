@@ -122,6 +122,7 @@ async function handleBrowserApiRequest(action, args) {
     case "browser.askGemini": return await apiAskGemini(args.prompt);
     case "browser.askChatGPT": return await apiAskChatGPT(args.prompt);
     case "browser.askClaude": return await apiAskClaude(args.prompt);
+    case "browser.askCustomWebLLM": return await apiAskCustomWebLLM(args.prompt, args.url);
     case "browser.downloadPDF": return await apiDownloadPDF(args.url);
     case "browser.readPDF": return await apiReadPDF(args.tabId);
     case "browser.followCitation": return await apiFollowCitation(args.citationOrDoi);
@@ -354,6 +355,31 @@ async function apiAskClaude(prompt) {
     args: [prompt]
   });
   return result[0]?.result || { error: "Claude query timed out" };
+async function apiAskCustomWebLLM(prompt, targetUrl = "https://chat.deepseek.com/") {
+  const tab = await chrome.tabs.create({ url: targetUrl, active: false });
+  await waitForTabLoad(tab.id);
+  const result = await chrome.scripting.executeScript({
+    target: { tabId: tab.id },
+    func: async (p) => {
+      const input = document.querySelector('textarea, [contenteditable="true"], div[role="textbox"], #prompt-textarea');
+      if (input) {
+        if (input.tagName === 'TEXTAREA') input.value = p;
+        else input.innerText = p;
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        const sendBtn = document.querySelector('button[type="submit"], button[aria-label*="Send"], button[aria-label*="Submit"], div[role="button"]');
+        if (sendBtn) sendBtn.click();
+      }
+      await new Promise(r => setTimeout(r, 7000));
+      return {
+        title: document.title,
+        url: window.location.href,
+        response: document.body ? document.body.innerText.substring(0, 15000) : "",
+        engine: "custom_web_llm"
+      };
+    },
+    args: [prompt]
+  });
+  return result[0]?.result || { error: "Custom Web LLM query timed out" };
 }
 
 
