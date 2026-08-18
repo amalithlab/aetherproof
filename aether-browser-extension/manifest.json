@@ -9,11 +9,19 @@
     "scripting",
     "downloads",
     "storage",
-    "webNavigation"
+    "webNavigation",
+    "alarms"
   ],
   "host_permissions": [
-    "<all_urls>"
+    "<all_urls>",
+    "ws://127.0.0.1:7823/*",
+    "ws://localhost:7823/*",
+    "http://127.0.0.1:7823/*",
+    "http://localhost:7823/*"
   ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'; connect-src ws://127.0.0.1:7823 ws://localhost:7823 http://127.0.0.1:7823 http://localhost:7823;"
+  },
   "background": {
     "service_worker": "background.js"
   },

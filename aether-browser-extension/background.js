@@ -97,6 +97,20 @@ function scheduleReconnect() {
   }
 }
 
+// Ensure connectToIDE is called when the MV3 alarm fires
+chrome.alarms.create("aether_ws_keepalive", { periodInMinutes: 1 });
+
+chrome.alarms.onAlarm.addListener((alarm) => {
+  if (alarm.name === "aether_ws_keepalive") {
+    if (!socket || socket.readyState !== WebSocket.OPEN) {
+      connectToIDE();
+    }
+  }
+});
+
+// Auto connect on service worker startup
+connectToIDE();
+
 // Listen for popup messages (e.g. manual reconnect)
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'reconnect') {
@@ -255,6 +269,10 @@ async function apiExtractCitations(tabId) {
     });
     return results[0]?.result || { citations: [] };
   } catch (e) {
+    return { error: e.message, citations: [] };
+  }
+}
+
 async function apiAskGemini(prompt) {
   // Try Chrome built-in AI (window.ai) first if available
   try {
@@ -359,6 +377,8 @@ async function apiAskClaude(prompt) {
     args: [prompt]
   });
   return result[0]?.result || { error: "Claude query timed out" };
+}
+
 async function apiAskCustomWebLLM(prompt, targetUrl = "https://chat.deepseek.com/") {
   const tab = await chrome.tabs.create({ url: targetUrl, active: false });
   await waitForTabLoad(tab.id);
