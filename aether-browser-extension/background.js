@@ -445,7 +445,27 @@ async function apiAskClaude(prompt) {
           input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true }));
         }
       }
-      await new Promise(r => setTimeout(r, 8000));
+      // Dynamic Stream Completion Polling: Wait for streaming response to finish naturally (up to 120s max)
+      async function waitForStreamComplete(maxMs = 120000) {
+        let lastLength = 0;
+        let stableCount = 0;
+        const startTime = Date.now();
+        
+        while (Date.now() - startTime < maxMs) {
+          await new Promise(r => setTimeout(r, 2000));
+          const currentLength = document.body ? document.body.innerText.length : 0;
+          // Check if text length has stabilized (no new text added for 2 consecutive checks)
+          if (currentLength > 0 && currentLength === lastLength) {
+            stableCount++;
+            if (stableCount >= 2) break; // Response output finished streaming
+          } else {
+            stableCount = 0;
+            lastLength = currentLength;
+          }
+        }
+      }
+
+      await waitForStreamComplete(120000);
       return {
         title: document.title,
         url: window.location.href,
