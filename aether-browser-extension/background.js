@@ -369,18 +369,22 @@ async function apiAskGemini(prompt) {
         }
       }
       
-      // Dynamic Stream Completion Polling: Wait for Gemini to finish outputting (up to 120s max)
-      async function waitForStreamComplete(maxMs = 120000) {
+      // Dynamic Stream Completion Polling: Wait for Gemini to finish outputting (up to 300s max)
+      async function waitForStreamComplete(maxMs = 300000) {
         let lastLength = 0;
         let stableCount = 0;
         const startTime = Date.now();
         
         while (Date.now() - startTime < maxMs) {
-          await new Promise(r => setTimeout(r, 2000));
+          await new Promise(r => setTimeout(r, 3000));
+          
+          // Check if Gemini / Claude is actively streaming via stop button presence
+          const isStillStreaming = !!document.querySelector('button[aria-label*="Stop"], button.stop-button, [data-testid="stop-button"]');
           const currentLength = document.body ? document.body.innerText.length : 0;
-          if (currentLength > 0 && currentLength === lastLength) {
+          
+          if (!isStillStreaming && currentLength > 0 && currentLength === lastLength) {
             stableCount++;
-            if (stableCount >= 2) break;
+            if (stableCount >= 2) break; // Response output finished streaming natively
           } else {
             stableCount = 0;
             lastLength = currentLength;
@@ -388,7 +392,7 @@ async function apiAskGemini(prompt) {
         }
       }
 
-      await waitForStreamComplete(120000);
+      await waitForStreamComplete(300000);
       return {
         title: document.title,
         url: window.location.href,
