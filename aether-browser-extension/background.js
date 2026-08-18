@@ -4,7 +4,8 @@
  * Exposes standardized Agent Browser API to AETHER research agents.
  */
 
-const IDE_WS_URL = "ws://127.0.0.1:7823";
+const IDE_WS_URLS = ["ws://127.0.0.1:7823", "ws://localhost:7823"];
+let currentUrlIdx = 0;
 let socket = null;
 let reconnectTimer = null;
 let keepAliveTimer = null;
@@ -14,11 +15,12 @@ function connectToIDE() {
     return;
   }
 
+  const wsUrl = IDE_WS_URLS[currentUrlIdx % IDE_WS_URLS.length];
   try {
-    socket = new WebSocket(IDE_WS_URL);
+    socket = new WebSocket(wsUrl);
 
     socket.onopen = () => {
-      console.log("[AETHER Extension] Connected to AETHER IDE at " + IDE_WS_URL);
+      console.log("[AETHER Extension] Connected to AETHER IDE at " + wsUrl);
       chrome.storage.local.set({ status: "connected", lastSeen: Date.now() });
       
       if (reconnectTimer) {
@@ -72,11 +74,13 @@ function connectToIDE() {
       if (keepAliveTimer) clearInterval(keepAliveTimer);
       keepAliveTimer = null;
       socket = null;
+      currentUrlIdx++;
       scheduleReconnect();
     };
 
     socket.onerror = (err) => {
       console.warn("[AETHER Extension] WebSocket error:", err);
+      currentUrlIdx++;
     };
   } catch (e) {
     socket = null;
