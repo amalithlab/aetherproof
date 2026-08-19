@@ -486,27 +486,28 @@ async function apiAskClaude(prompt) {
       if (input) {
         input.focus();
         
-        // Clear old content
-        input.innerHTML = '';
+        // Select all text in ProseMirror container via Selection API
+        const range = document.createRange();
+        range.selectNodeContents(input);
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
         
-        // Create paragraph node for ProseMirror
-        const pElem = document.createElement('p');
-        pElem.textContent = p;
-        input.appendChild(pElem);
+        // Execute insertText on the active range to update ProseMirror internal state model
+        document.execCommand('insertText', false, p);
         
-        input.dispatchEvent(new InputEvent('input', { inputType: 'insertText', data: p, bubbles: true }));
+        input.dispatchEvent(new Event('input', { bubbles: true }));
         input.dispatchEvent(new Event('change', { bubbles: true }));
         
         await new Promise(r => setTimeout(r, 600));
 
-        // Click Send button or dispatch Enter
+        // Click Send button or dispatch Enter keyboard events
         const sendBtn = document.querySelector('button[aria-label*="Send"], button[aria-label*="Submit"], button[type="submit"], button.bg-accent-main-100, button[aria-label*="send message"]');
         if (sendBtn && !sendBtn.disabled) {
           sendBtn.click();
         } else {
-          // Send Enter keyboard event directly to input
-          const enterDown = new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true, cancelable: true });
-          input.dispatchEvent(enterDown);
+          input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true }));
+          input.dispatchEvent(new KeyboardEvent('keyup', { key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true }));
         }
       }
       
