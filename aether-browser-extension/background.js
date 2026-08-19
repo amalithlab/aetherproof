@@ -472,39 +472,48 @@ async function apiAskClaude(prompt) {
   const result = await chrome.scripting.executeScript({
     target: { tabId: tab.id },
     func: async (p) => {
-      // Find Claude contenteditable input area (ProseMirror / div[contenteditable="true"])
-      const input = document.querySelector('.ProseMirror, div[contenteditable="true"], textarea, div[role="textbox"]');
+      // Find Claude input container (ProseMirror contenteditable)
+      const input = document.querySelector('.ProseMirror, [contenteditable="true"], textarea, div[role="textbox"]');
       if (input) {
         input.focus();
-        // Use document.execCommand to reliably update ProseMirror internal state
-        const inserted = document.execCommand('insertText', false, p);
-        if (!inserted || !input.innerText.trim()) {
-          input.innerText = p;
-        }
-        input.dispatchEvent(new Event('input', { bubbles: true }));
+        
+        // Clear old content
+        input.innerHTML = '';
+        
+        // Create paragraph node for ProseMirror
+        const pElem = document.createElement('p');
+        pElem.textContent = p;
+        input.appendChild(pElem);
+        
+        input.dispatchEvent(new InputEvent('input', { inputType: 'insertText', data: p, bubbles: true }));
         input.dispatchEvent(new Event('change', { bubbles: true }));
         
         await new Promise(r => setTimeout(r, 600));
-        const sendBtn = document.querySelector('button[aria-label*="Send"], button[aria-label*="Submit"], button[type="submit"], button.bg-accent-main-100');
+
+        // Click Send button or dispatch Enter
+        const sendBtn = document.querySelector('button[aria-label*="Send"], button[aria-label*="Submit"], button[type="submit"], button.bg-accent-main-100, button[aria-label*="send message"]');
         if (sendBtn && !sendBtn.disabled) {
           sendBtn.click();
         } else {
-          input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true }));
+          // Send Enter keyboard event directly to input
+          const enterDown = new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true, cancelable: true });
+          input.dispatchEvent(enterDown);
         }
       }
-      // Dynamic Stream Completion Polling: Wait for streaming response to finish naturally (up to 120s max)
-      async function waitForStreamComplete(maxMs = 120000) {
+      
+      // Dynamic Stream Completion Polling: Wait for Claude to finish outputting (up to 300s max)
+      async function waitForStreamComplete(maxMs = 300000) {
         let lastLength = 0;
         let stableCount = 0;
         const startTime = Date.now();
         
         while (Date.now() - startTime < maxMs) {
-          await new Promise(r => setTimeout(r, 2000));
+          await new Promise(r => setTimeout(r, 3000));
+          const isStillStreaming = !!document.querySelector('button[aria-label*="Stop"], button.stop-button, [data-testid="stop-button"]');
           const currentLength = document.body ? document.body.innerText.length : 0;
-          // Check if text length has stabilized (no new text added for 2 consecutive checks)
-          if (currentLength > 0 && currentLength === lastLength) {
+          if (!isStillStreaming && currentLength > 0 && currentLength === lastLength) {
             stableCount++;
-            if (stableCount >= 2) break; // Response output finished streaming
+            if (stableCount >= 2) break;
           } else {
             stableCount = 0;
             lastLength = currentLength;
@@ -512,7 +521,7 @@ async function apiAskClaude(prompt) {
         }
       }
 
-      await waitForStreamComplete(120000);
+      await waitForStreamComplete(300000);
       return {
         title: document.title,
         url: window.location.href,
