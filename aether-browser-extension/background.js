@@ -481,34 +481,39 @@ async function apiAskClaude(prompt) {
   const result = await chrome.scripting.executeScript({
     target: { tabId: tab.id },
     func: async (p) => {
-      // Find Claude input container (ProseMirror contenteditable)
       const input = document.querySelector('.ProseMirror, [contenteditable="true"], textarea, div[role="textbox"]');
       if (input) {
         input.focus();
         
-        // Select all text in ProseMirror container via Selection API
+        // Select all existing text in ProseMirror container via Selection API
         const range = document.createRange();
         range.selectNodeContents(input);
         const sel = window.getSelection();
         sel.removeAllRanges();
         sel.addRange(range);
         
-        // Execute insertText on the active range to update ProseMirror internal state model
-        document.execCommand('insertText', false, p);
+        // Try insertText first
+        let success = document.execCommand('insertText', false, p);
+        if (!success || !input.innerText.trim()) {
+          // Fallback: set innerHTML with paragraph tag and dispatch InputEvent
+          input.innerHTML = `<p>${p.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>`;
+        }
         
+        input.dispatchEvent(new InputEvent('input', { inputType: 'insertText', data: p, bubbles: true }));
         input.dispatchEvent(new Event('input', { bubbles: true }));
         input.dispatchEvent(new Event('change', { bubbles: true }));
         
-        await new Promise(r => setTimeout(r, 600));
+        await new Promise(r => setTimeout(r, 800));
 
-        // Click Send button or dispatch Enter keyboard events
-        const sendBtn = document.querySelector('button[aria-label*="Send"], button[aria-label*="Submit"], button[type="submit"], button.bg-accent-main-100, button[aria-label*="send message"]');
-        if (sendBtn && !sendBtn.disabled) {
+        // Click Send button (Claude uses button[aria-label*="Send message"], button[aria-label*="Send"], or button.bg-accent-main-100)
+        const sendBtn = document.querySelector('button[aria-label*="Send"], button[aria-label*="Submit"], button[type="submit"], button.bg-accent-main-100, button[aria-label*="send"]');
+        if (sendBtn) {
+          sendBtn.removeAttribute('disabled');
           sendBtn.click();
-        } else {
-          input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true }));
-          input.dispatchEvent(new KeyboardEvent('keyup', { key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true }));
         }
+        
+        // Also dispatch Enter keypress as secondary trigger
+        input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true }));
       }
       
       // Dynamic Stream Completion Polling: Wait for Claude to finish outputting (up to 300s max)
