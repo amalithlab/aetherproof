@@ -397,10 +397,15 @@ async function apiAskGemini(prompt) {
       }
 
       await waitForStreamComplete(300000);
+      
+      // Target model response container to avoid capturing sidebar/UI chrome text
+      const modelResponseNode = document.querySelector('message-content, model-response, .model-response-text, [data-test-id="conversation-turn"]:last-child, .markdown-main-panel');
+      const responseText = modelResponseNode ? modelResponseNode.innerText : (document.body ? document.body.innerText.substring(0, 15000) : "");
+      
       return {
         title: document.title,
         url: window.location.href,
-        response: document.body ? document.body.innerText.substring(0, 15000) : "",
+        response: responseText,
         engine: "gemini_web_ui"
       };
     },
@@ -454,11 +459,15 @@ async function apiAskChatGPT(prompt) {
         }
       }
 
-      await waitForStreamComplete(120000);
+      await waitForStreamComplete(300000);
+      
+      const gptRespNode = document.querySelector('[data-message-author-role="assistant"], .agent-turn, [data-testid="conversation-turn-2"]');
+      const responseText = gptRespNode ? gptRespNode.innerText : (document.body ? document.body.innerText.substring(0, 15000) : "");
+      
       return {
         title: document.title,
         url: window.location.href,
-        response: document.body ? document.body.innerText.substring(0, 15000) : "",
+        response: responseText,
         engine: "chatgpt_web_ui"
       };
     },
@@ -522,10 +531,14 @@ async function apiAskClaude(prompt) {
       }
 
       await waitForStreamComplete(300000);
+      
+      const claudeRespNode = document.querySelector('.font-claude-message, [data-is-streaming="false"], .grid-cols-1:last-child');
+      const responseText = claudeRespNode ? claudeRespNode.innerText : (document.body ? document.body.innerText.substring(0, 15000) : "");
+      
       return {
         title: document.title,
         url: window.location.href,
-        response: document.body ? document.body.innerText.substring(0, 15000) : "",
+        response: responseText,
         engine: "claude_web_ui"
       };
     },
