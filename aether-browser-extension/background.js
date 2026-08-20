@@ -482,45 +482,37 @@ async function apiAskClaude(prompt) {
     target: { tabId: tab.id },
     func: async (p) => {
       // Find Claude input container (ProseMirror contenteditable)
-      const input = document.querySelector('.ProseMirror, [contenteditable="true"], textarea, div[role="textbox"]');
+      const input = document.querySelector('.ProseMirror, [contenteditable="true"], div[role="textbox"], textarea');
       if (input) {
         input.focus();
         
-        // Method 1: ClipboardEvent paste simulation — natively triggers ProseMirror paste parser
-        const pasteData = new DataTransfer();
-        pasteData.setData('text/plain', p);
-        const pasteEvent = new ClipboardEvent('paste', {
-          clipboardData: pasteData,
-          bubbles: true,
-          cancelable: true
-        });
-        const handled = input.dispatchEvent(pasteEvent);
+        // Focus and select all content in ProseMirror
+        const range = document.createRange();
+        range.selectNodeContents(input);
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
         
-        // Method 2: If pasteEvent wasn't consumed by ProseMirror, fallback to Range insertion
+        // Execute insertText on active selection range
+        document.execCommand('insertText', false, p);
         if (!input.innerText.trim()) {
-          input.innerHTML = `<p>${p.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>`;
-          input.dispatchEvent(new Event('input', { bubbles: true }));
-          input.dispatchEvent(new Event('change', { bubbles: true }));
+          input.innerText = p;
         }
         
-        await new Promise(r => setTimeout(r, 1000));
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+        
+        await new Promise(r => setTimeout(r, 800));
 
-        // Click Send button or trigger Enter keypress
+        // Click Send button or trigger Enter
         const sendBtn = document.querySelector('button[aria-label*="Send"], button[aria-label*="Submit"], button[type="submit"], button.bg-accent-main-100, button[aria-label*="send message"]');
-        if (sendBtn) {
+        if (sendBtn && !sendBtn.disabled) {
           sendBtn.click();
+        } else {
+          // Send Enter keyboard event
+          input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true }));
+          input.dispatchEvent(new KeyboardEvent('keyup', { key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true }));
         }
-        
-        // Dispatch Enter keyboard event directly
-        const enterEvt = new KeyboardEvent('keydown', {
-          key: 'Enter',
-          code: 'Enter',
-          keyCode: 13,
-          which: 13,
-          bubbles: true,
-          cancelable: true
-        });
-        input.dispatchEvent(enterEvt);
       }
       
       // Dynamic Stream Completion Polling: Wait for Claude to finish outputting (up to 300s max)
