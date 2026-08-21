@@ -365,12 +365,14 @@ async function apiAskGemini(prompt) {
         
         await new Promise(r => setTimeout(r, 600));
 
-        const sendBtn = document.querySelector('button[aria-label*="Send"] button, button[aria-label*="Submit"], button.send-button, button[aria-label*="Send message"], button[aria-label*="Send"], .send-button button, div[role="button"][aria-label*="Send"]');
-        if (sendBtn && !sendBtn.disabled) {
+        // Click Send button or dispatch Enter keyboard event
+        const sendBtn = document.querySelector('button[aria-label*="Send"], button[aria-label*="Submit"], button.send-button, [aria-label*="Send message"], button[aria-label="Send prompt"], div[role="button"][aria-label*="Send"]');
+        if (sendBtn) {
+          sendBtn.removeAttribute('disabled');
           sendBtn.click();
-        } else {
-          input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true }));
         }
+        input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true }));
+        input.dispatchEvent(new KeyboardEvent('keyup', { key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true }));
       }
       
       // Dynamic Stream Completion Polling: Wait for Gemini to finish outputting (up to 300s max)
